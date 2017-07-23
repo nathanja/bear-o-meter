@@ -9,6 +9,13 @@ from credentials import *
 import re
 from textblob import TextBlob
 
+channel = 11
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(channel, GPIO.OUT, initial=GPIO.LOW)
+
+#GPIO.output(channel, GPIO.HIGH)
+
 def clean_tweet(tweet):
 	'''
 	Utility function to clean tweet text by removing links, special characters

@@ -6,7 +6,10 @@ Python application for bear-o-meter installation.
 
 Pip packages:
 - python-twitter
+- textblob
+- RPi.GPIO
 
-## Interesting resources
+## References
 
 https://dev.twitter.com/resources/twitter-libraries
+http://www.geeksforgeeks.org/twitter-sentiment-analysis-using-python/
