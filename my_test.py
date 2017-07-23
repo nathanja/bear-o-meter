@@ -1,4 +1,5 @@
 import sys
+import signal
 from time import sleep
 
 import RPi.GPIO as GPIO
@@ -16,6 +17,11 @@ GPIO.setup(channel, GPIO.OUT, initial=GPIO.LOW)
 
 #GPIO.output(channel, GPIO.HIGH)
 
+def signal_handler(signal, frame):
+	print 'Caught SIGINT - exiting cleanly...'
+	GPIO.cleanup()
+	sys.exit()
+
 def clean_tweet(tweet):
 	'''
 	Utility function to clean tweet text by removing links, special characters
@@ -27,6 +33,8 @@ def analyse_tweet(tweet):
 	analysis = TextBlob(clean_tweet(tweet))
 	return analysis.sentiment.polarity
 
+#signal.signal(signal.SIGINT, signal_handler)
+
 api = twitter.Api(consumer_key=CONSUMER_KEY,
                 consumer_secret=CONSUMER_SECRET,
                 access_token_key=ACCESS_TOKEN,
@@ -37,10 +45,14 @@ api = twitter.Api(consumer_key=CONSUMER_KEY,
 
 #status = api.PostUpdate('Another post!')
 
-stream = api.GetStreamFilter(track=['curiosity'])
+try:
+	stream = api.GetStreamFilter(track=['curiosity'])
 
-for line in stream:
-	text = line['text']
-	print text
-	print 'Sentiment: ' + str(analyse_tweet(text))
-	print '###########'
+	for line in stream:
+		text = line['text']
+		print text
+		print 'Sentiment: ' + str(analyse_tweet(text))
+		print '###########'
+except:
+	print 'Error in reading stream!'
+	GPIO.cleanup()
