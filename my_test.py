@@ -1,4 +1,5 @@
 import sys
+from time import sleep
 
 import twitter
 from credentials import *
@@ -12,3 +13,9 @@ api = twitter.Api(consumer_key=CONSUMER_KEY,
 #print timeline
 
 #status = api.PostUpdate('Another post!')
+
+stream = api.GetStreamFilter(track=['curiosity'])
+
+for line in stream:
+	print line['text']
+	print '###########'

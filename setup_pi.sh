@@ -2,6 +2,7 @@
 
 sudo apt-get update && sudo apt-get -y upgrade
 sudo apt-get install python-dev python-pip nodejs build-essential
+sudo apt-get install screen
 
 sudo pip install --upgrade pip
 sudo pip install virtualenv virtualenvwrapper
