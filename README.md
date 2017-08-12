@@ -13,3 +13,4 @@ Pip packages:
 
 https://dev.twitter.com/resources/twitter-libraries
 http://www.geeksforgeeks.org/twitter-sentiment-analysis-using-python/
+https://sourceforge.net/p/raspberry-gpio-python/wiki/BasicUsage/
