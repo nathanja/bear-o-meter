@@ -12,6 +12,8 @@ from textblob import TextBlob
 
 channel = 11
 
+bear_id = 888598391298465792
+
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(channel, GPIO.OUT, initial=GPIO.LOW)
 
@@ -46,13 +48,19 @@ api = twitter.Api(consumer_key=CONSUMER_KEY,
 #status = api.PostUpdate('Another post!')
 
 try:
-	stream = api.GetStreamFilter(track=['curiosity'])
+	stream = api.GetStreamFilter(track=['#colabsau'])
 
 	for line in stream:
 		text = line['text']
+		sen_val = analyse_tweet(text)
 		print text
-		print 'Sentiment: ' + str(analyse_tweet(text))
+		print 'Sentiment: ' + str(sen_val)
 		print '###########'
+
+		if sen_val > 0.5 and line['user']['id'] != bear_id:
+			print 'Reposting!'
+			api.PostRetweet(line['id'])
+
 except:
 	print 'Error in reading stream!'
 	GPIO.cleanup()
