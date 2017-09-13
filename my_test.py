@@ -2,7 +2,12 @@ import sys
 import signal
 from time import sleep
 
-import RPi.GPIO as GPIO
+from threading import Timer
+
+try:
+	import RPi.GPIO as GPIO
+except:
+	GPIO = None
 
 import twitter
 from credentials import *
@@ -63,7 +68,7 @@ def analyse_tweet(tweet):
 	return analysis.sentiment.polarity
 
 
-def analyse_stream(bear_id, track_list):
+def analyse_stream(bear_id, track_list, tim):
 	if not track_list:
 		print 'You gave me nothing to track!'
 		return
@@ -80,7 +85,11 @@ def analyse_stream(bear_id, track_list):
 
 			if sen_val > 0.5 and line['user']['id'] != bear_id:
 				print 'Reposting!'
+				api.CreateFavorite(status_id=line['id'])
 				api.PostRetweet(line['id'])
+				inflate('FULL')
+				tim.cancel()
+				tim.start()
 
 	except:
 		print 'Error in reading stream!'
@@ -98,6 +107,8 @@ if __name__ == '__main__':
 					access_token_key=ACCESS_TOKEN,
 					access_token_secret=ACCESS_SECRET)
 
+	inflater_timer = Timer(30.0, inflate, args=['OFF'])
+	#init_gpio()
 	#timeline = api.GetHomeTimeline()
 	#print timeline
 
@@ -107,4 +118,4 @@ if __name__ == '__main__':
 	print 'id: ', myself['id']
 	print 'name: ', myself['name']
 	print 'screen_name: ', myself['screen_name']
-	#analyse_stream(myself['id'], ['#colabsau','@'+myself['screen_name']
+	#analyse_stream(myself['id'], ['#colabsau','@'+myself['screen_name']], inflater_timer)
