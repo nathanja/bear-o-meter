@@ -30,12 +30,13 @@ def init_gpio():
 
 def signal_handler(signal, frame):
 	print 'Caught SIGINT - exiting cleanly...'
-	if gpio_initialised:
-		GPIO.cleanup()
-		gpio_initialised = False
+	global gpio_initialised
+	#if gpio_initialised:
+	print('Cleaning up GPIO')
+	GPIO.cleanup()
+	gpio_initialised = False
 
 	sys.exit()
-
 
 def inflate(power='FULL'):
 	if power == 'FULL':
@@ -68,13 +69,14 @@ def analyse_tweet(tweet):
 	return analysis.sentiment.polarity
 
 
-def analyse_stream(bear_id, track_list, tim):
+def analyse_stream(bear_id, track_list):
 	if not track_list:
 		print 'You gave me nothing to track!'
 		return
 
 	try:
 		stream = api.GetStreamFilter(track=track_list)
+		tim = Timer(30.0, inflate, args=['OFF'])
 
 		for line in stream:
 			text = line['text']
@@ -89,11 +91,15 @@ def analyse_stream(bear_id, track_list, tim):
 				api.PostRetweet(line['id'])
 				inflate('FULL')
 				tim.cancel()
+				tim = Timer(30.0, inflate, args=['OFF'])
 				tim.start()
 
 	except:
 		print 'Error in reading stream!'
+		global gpio_initialised
+
 		if gpio_initialised:
+			print('Cleaning up GPIO')
 			GPIO.cleanup()
 			gpio_initialised = False
 
@@ -107,8 +113,7 @@ if __name__ == '__main__':
 					access_token_key=ACCESS_TOKEN,
 					access_token_secret=ACCESS_SECRET)
 
-	inflater_timer = Timer(30.0, inflate, args=['OFF'])
-	#init_gpio()
+	init_gpio()
 	#timeline = api.GetHomeTimeline()
 	#print timeline
 
@@ -118,4 +123,4 @@ if __name__ == '__main__':
 	print 'id: ', myself['id']
 	print 'name: ', myself['name']
 	print 'screen_name: ', myself['screen_name']
-	#analyse_stream(myself['id'], ['#colabsau','@'+myself['screen_name']], inflater_timer)
+	analyse_stream(myself['id'], ['#colabssydney','@'+myself['screen_name']])
