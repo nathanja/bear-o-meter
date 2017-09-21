@@ -39,6 +39,7 @@ def signal_handler(signal, frame):
 	sys.exit()
 
 def inflate(power='FULL'):
+	print('Inflating ' + power)
 	if power == 'FULL':
 		GPIO.output(channels, GPIO.HIGH)
 	elif power == 'OFF':
@@ -84,8 +85,12 @@ def analyse_stream(bear_id, track_list):
 			print text
 			print 'Sentiment: ' + str(sen_val)
 			print '###########'
-
-			if sen_val > 0.5 and line['user']['id'] != bear_id:
+			
+			if 'power on' in text.lower():
+				inflate('FULL')
+			elif 'power off' in text.lower():
+				inflate('OFF')
+			elif sen_val > 0.39 and line['user']['id'] != bear_id:
 				print 'Reposting!'
 				api.CreateFavorite(status_id=line['id'])
 				api.PostRetweet(line['id'])
