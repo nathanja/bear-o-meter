@@ -4,6 +4,8 @@ from time import sleep
 
 from threading import Timer
 
+from datetime import datetime
+
 try:
 	import RPi.GPIO as GPIO
 except:
@@ -20,23 +22,45 @@ channels = [3,5]
 fan_balance = 0
 gpio_initialised = False
 
+# 1 Jan 1970 constant
+epoch = datetime.utcfromtimestamp(0)
+
+# Function for converting timestamps to epochs
+def datetime_to_epoch(datestring):
+	global epoch
+    #time_pattern = '%Y/%m/%d %H:%M:%S.%f'
+
+    #dt = datetime.strptime(datestring,time_pattern)
+    #dt = datetime.utcnow()
+	dt = datetime.fromtimestamp(datestring)
+
+    return (dt - epoch).total_seconds()
+
 
 def init_gpio():
+	global gpio_initialised
 	GPIO.setmode(GPIO.BOARD)
 	GPIO.setup(channels, GPIO.OUT, initial=GPIO.LOW)
 	gpio_initialised = True
 
-#GPIO.output(channel, GPIO.HIGH)
 
 def signal_handler(signal, frame):
 	print 'Caught SIGINT - exiting cleanly...'
 	global gpio_initialised
-	#if gpio_initialised:
-	print('Cleaning up GPIO')
-	GPIO.cleanup()
-	gpio_initialised = False
+	if gpio_initialised:
+		print('Cleaning up GPIO')
+		GPIO.cleanup()
+		gpio_initialised = False
 
 	sys.exit()
+
+
+def reset_timer(tim, new_time, func, f_args)
+	tim.cancel()
+	tim = Timer(new_time, func, args=f_args)
+	tim.start()
+	return tim
+
 
 def inflate(power='FULL'):
 	print('Inflating ' + power)
@@ -79,6 +103,8 @@ def analyse_stream(bear_id, track_list):
 		stream = api.GetStreamFilter(track=track_list)
 		tim = Timer(30.0, inflate, args=['OFF'])
 
+		last_time = 0
+
 		for line in stream:
 			text = line['text']
 			sen_val = analyse_tweet(text)
@@ -94,10 +120,21 @@ def analyse_stream(bear_id, track_list):
 				print 'Reposting!'
 				api.CreateFavorite(status_id=line['id'])
 				api.PostRetweet(line['id'])
+
+				tweet_time = datetime_to_epoch(line['created_at'])
 				inflate('FULL')
-				tim.cancel()
-				tim = Timer(30.0, inflate, args=['OFF'])
-				tim.start()
+
+				time_dif = tweet_time - last_time
+				if time_dif > 120.0:
+					tim = reset_timer(tim, 60.0, inflate, ['OFF'])
+
+				elif time_dif > 20.0:
+					tim = reset_timer(tim, 45.0, inflate, ['OFF'])
+		
+				else:
+					tim = reset_timer(tim, 30.0, inflate, ['OFF'])
+
+				last_time = tweet_time
 
 	except:
 		print 'Error in reading stream!'
@@ -129,3 +166,5 @@ if __name__ == '__main__':
 	print 'name: ', myself['name']
 	print 'screen_name: ', myself['screen_name']
 	analyse_stream(myself['id'], ['#colabssydney','@'+myself['screen_name']])
+
+
