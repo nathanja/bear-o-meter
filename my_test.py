@@ -1,4 +1,4 @@
-import sys
+import sys, traceback
 import signal
 from time import sleep
 
@@ -28,13 +28,13 @@ epoch = datetime.utcfromtimestamp(0)
 # Function for converting timestamps to epochs
 def datetime_to_epoch(datestring):
 	global epoch
-    #time_pattern = '%Y/%m/%d %H:%M:%S.%f'
+	time_pattern = '%a %b %d %H:%M:%S %z %Y'
 
-    #dt = datetime.strptime(datestring,time_pattern)
-    #dt = datetime.utcnow()
-	dt = datetime.fromtimestamp(datestring)
+	dt = datetime.strptime(datestring,time_pattern)
+	#dt = datetime.utcnow()
+	#dt = datetime.fromtimestamp(datestring)
 
-    return (dt - epoch).total_seconds()
+	return (dt - epoch).total_seconds()
 
 
 def init_gpio():
@@ -55,7 +55,7 @@ def signal_handler(signal, frame):
 	sys.exit()
 
 
-def reset_timer(tim, new_time, func, f_args)
+def reset_timer(tim, new_time, func, f_args):
 	tim.cancel()
 	tim = Timer(new_time, func, args=f_args)
 	tim.start()
@@ -121,10 +121,11 @@ def analyse_stream(bear_id, track_list):
 				api.CreateFavorite(status_id=line['id'])
 				api.PostRetweet(line['id'])
 
-				tweet_time = datetime_to_epoch(line['created_at'])
+				#tweet_time = datetime_to_epoch(line['created_at'])
 				inflate('FULL')
 
-				time_dif = tweet_time - last_time
+				#time_dif = tweet_time - last_time
+				time_dif = 10.0
 				if time_dif > 120.0:
 					tim = reset_timer(tim, 60.0, inflate, ['OFF'])
 
@@ -134,10 +135,11 @@ def analyse_stream(bear_id, track_list):
 				else:
 					tim = reset_timer(tim, 30.0, inflate, ['OFF'])
 
-				last_time = tweet_time
+				#last_time = tweet_time
 
 	except:
 		print 'Error in reading stream!'
+		traceback.print_exc()
 		global gpio_initialised
 
 		if gpio_initialised:
