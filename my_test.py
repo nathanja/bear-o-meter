@@ -1,10 +1,12 @@
 import sys
 import signal
+import traceback
 from time import sleep
 
 from threading import Timer
 
 from datetime import datetime
+import pytz
 
 try:
 	import RPi.GPIO as GPIO
@@ -28,11 +30,9 @@ epoch = datetime.utcfromtimestamp(0)
 # Function for converting timestamps to epochs
 def datetime_to_epoch(datestring):
 	global epoch
-    #time_pattern = '%Y/%m/%d %H:%M:%S.%f'
+    time_pattern = '%a %b %d %H:%M:%S +0000 %Y'
 
-    #dt = datetime.strptime(datestring,time_pattern)
-    #dt = datetime.utcnow()
-	dt = datetime.fromtimestamp(datestring)
+    dt = datetime.strptime(datestring,time_pattern).replace(tzinfo=pytz.UTC)
 
     return (dt - epoch).total_seconds()
 
@@ -126,18 +126,19 @@ def analyse_stream(bear_id, track_list):
 
 				time_dif = tweet_time - last_time
 				if time_dif > 120.0:
-					tim = reset_timer(tim, 60.0, inflate, ['OFF'])
+					tim = reset_timer(tim, 90.0, inflate, ['OFF'])
 
 				elif time_dif > 20.0:
-					tim = reset_timer(tim, 45.0, inflate, ['OFF'])
+					tim = reset_timer(tim, 60.0, inflate, ['OFF'])
 		
 				else:
-					tim = reset_timer(tim, 30.0, inflate, ['OFF'])
+					tim = reset_timer(tim, 45.0, inflate, ['OFF'])
 
 				last_time = tweet_time
 
 	except:
 		print 'Error in reading stream!'
+		traceback.print_exc()
 		global gpio_initialised
 
 		if gpio_initialised:

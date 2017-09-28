@@ -16,7 +16,7 @@ echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
 source ~/.bashrc
 
 mkvirtualenv bear
-pip install python-twitter textblob RPi.GPIO
+pip install python-twitter textblob RPi.GPIO pytz
 python -m textblob.download_corpora
 deactivate
 
