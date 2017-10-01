@@ -30,9 +30,9 @@ epoch = datetime.utcfromtimestamp(0)
 # Function for converting timestamps to epochs
 def datetime_to_epoch(datestring):
 	global epoch
-    time_pattern = '%a %b %d %H:%M:%S +0000 %Y'
+	time_pattern = '%a %b %d %H:%M:%S +0000 %Y'
 
-    dt = datetime.strptime(datestring,time_pattern).replace(tzinfo=pytz.UTC)
+	dt = datetime.strptime(datestring,time_pattern) #.replace(tzinfo=pytz.UTC)
 
 	return (dt - epoch).total_seconds()
 
@@ -59,6 +59,7 @@ def reset_timer(tim, new_time, func, f_args):
 	tim.cancel()
 	tim = Timer(new_time, func, args=f_args)
 	tim.start()
+	print('Timer set for %.1f seconds' % new_time)
 	return tim
 
 
@@ -110,13 +111,12 @@ def analyse_stream(bear_id, track_list):
 			sen_val = analyse_tweet(text)
 			print text
 			print 'Sentiment: ' + str(sen_val)
-			print '###########'
 			
 			if 'power on' in text.lower():
 				inflate('FULL')
 			elif 'power off' in text.lower():
 				inflate('OFF')
-			elif sen_val > 0.39 and line['user']['id'] != bear_id:
+			elif sen_val > 0.29 and line['user']['id'] != bear_id:
 				print 'Reposting!'
 				api.CreateFavorite(status_id=line['id'])
 				api.PostRetweet(line['id'])
@@ -128,13 +128,15 @@ def analyse_stream(bear_id, track_list):
 				if time_dif > 120.0:
 					tim = reset_timer(tim, 90.0, inflate, ['OFF'])
 
-				elif time_dif > 20.0:
+				elif time_dif > 45.0:
 					tim = reset_timer(tim, 60.0, inflate, ['OFF'])
 		
 				else:
 					tim = reset_timer(tim, 45.0, inflate, ['OFF'])
 
 				last_time = tweet_time
+
+			print '###########\n'
 
 	except:
 		print 'Error in reading stream!'
